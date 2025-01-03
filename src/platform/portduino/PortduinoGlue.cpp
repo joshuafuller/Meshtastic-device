@@ -90,7 +90,7 @@ void getMacAddr(uint8_t *dmac)
         if (strlen(optionMac) >= 12) {
             MAC_from_string(optionMac, dmac);
         } else {
-            uint32_t hwId;
+            uint32_t hwId = {0};
             sscanf(optionMac, "%u", &hwId);
             dmac[0] = 0x80;
             dmac[1] = 0;
@@ -104,7 +104,7 @@ void getMacAddr(uint8_t *dmac)
         exit;
     } else {
 
-        struct hci_dev_info di;
+        struct hci_dev_info di = {0};
         di.dev_id = 0;
         bdaddr_t bdaddr;
         int btsock;
@@ -153,6 +153,7 @@ void portduinoSetup()
     std::string gpioChipName = "gpiochip";
     settingsStrings[i2cdev] = "";
     settingsStrings[keyboardDevice] = "";
+    settingsStrings[pointerDevice] = "";
     settingsStrings[webserverrootpath] = "";
     settingsStrings[spidev] = "";
     settingsStrings[displayspidev] = "";
@@ -230,6 +231,9 @@ void portduinoSetup()
             dmac[3] = hash[3];
             dmac[4] = hash[4];
             dmac[5] = hash[5];
+            char macBuf[13] = {0};
+            sprintf(macBuf, "%02X%02X%02X%02X%02X%02X", dmac[0], dmac[1], dmac[2], dmac[3], dmac[4], dmac[5]);
+            settingsStrings[mac_address] = macBuf;
         }
     }
 
@@ -239,7 +243,7 @@ void portduinoSetup()
         std::cout << "Please set a MAC Address in config.yaml using either MACAddress or MACAddressSource." << std::endl;
         exit(EXIT_FAILURE);
     }
-    std::cout << "MAC Address: " << std::hex << +dmac[0] << +dmac[1] << +dmac[2] << +dmac[3] << +dmac[4] << +dmac[5] << std::endl;
+    printf("MAC ADDRESS: %02X:%02X:%02X:%02X:%02X:%02X\n", dmac[0], dmac[1], dmac[2], dmac[3], dmac[4], dmac[5]);
     // Rather important to set this, if not running simulated.
     randomSeed(time(NULL));
 
@@ -455,6 +459,8 @@ bool loadConfig(const char *configPath)
                 settingsMap[displayPanel] = ili9341;
             else if (yamlConfig["Display"]["Panel"].as<std::string>("") == "ILI9342")
                 settingsMap[displayPanel] = ili9342;
+            else if (yamlConfig["Display"]["Panel"].as<std::string>("") == "ILI9486")
+                settingsMap[displayPanel] = ili9486;
             else if (yamlConfig["Display"]["Panel"].as<std::string>("") == "ILI9488")
                 settingsMap[displayPanel] = ili9488;
             else if (yamlConfig["Display"]["Panel"].as<std::string>("") == "HX8357D")
@@ -515,6 +521,7 @@ bool loadConfig(const char *configPath)
         }
         if (yamlConfig["Input"]) {
             settingsStrings[keyboardDevice] = (yamlConfig["Input"]["KeyboardDevice"]).as<std::string>("");
+            settingsStrings[pointerDevice] = (yamlConfig["Input"]["PointerDevice"]).as<std::string>("");
         }
 
         if (yamlConfig["Webserver"]) {

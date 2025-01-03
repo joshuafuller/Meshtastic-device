@@ -40,6 +40,7 @@
 #include <utility>
 
 #ifdef ARCH_ESP32
+#include "freertosinc.h"
 #if !MESHTASTIC_EXCLUDE_WEBSERVER
 #include "mesh/http/WebServer.h"
 #endif
@@ -172,6 +173,8 @@ std::pair<uint8_t, TwoWire *> nodeTelemetrySensorsMap[_meshtastic_TelemetrySenso
 #endif
 
 Router *router = NULL; // Users of router don't care what sort of subclass implements that API
+
+const char *firmware_version = optstr(APP_VERSION_SHORT);
 
 const char *getDeviceName()
 {
@@ -360,6 +363,8 @@ void setup()
 #endif
 #endif
 #endif
+
+    initSPI();
 
     OSThread::setup();
 
@@ -636,8 +641,6 @@ void setup()
 #ifdef ARCH_RP2040
     rp2040Setup();
 #endif
-
-    initSPI(); // needed here before reading from littleFS
 
     // We do this as early as possible because this loads preferences from flash
     // but we need to do this after main cpu init (esp32setup), because we need the random seed set
